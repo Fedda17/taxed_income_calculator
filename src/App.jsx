@@ -17,12 +17,12 @@ function App() {
 
 function RalForm(){
   const [ral_lorda, set_ral_lorda] = useState('15000');
-  ral_lorda_as_number = Number(ral_lorda)
+  const ral_lorda_as_number = Number(ral_lorda)
 
   return (
       <>
-        <input type="number" value={ral_lorda} onChange={e => set_ral_lorda(e.target.value)}  id="ral_lorda" name="ral_lorda" /> €
         <label>Inserisci il tuo lordo qui: </label>
+        <input type="number" value={ral_lorda} onChange={e => set_ral_lorda(e.target.value)}  id="ral_lorda" name="ral_lorda" /> €
         <br></br><br></br>
         <button onClick={() => calculate_taxed_income(ral_lorda_as_number)}>Calcola netto</button>
         <br></br>
