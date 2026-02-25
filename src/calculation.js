@@ -32,6 +32,9 @@ function apply_irpef(imp_fiscale, taxes){
     }
 
     tax_import -= apply_detrazioni(imp_fiscale);
+    
+    //La somma non può essere negativa dopo le detrazioni
+    tax_import = Math.max(0, tax_import);
     taxes.irpef = tax_import;
     return tax_import;
 }
