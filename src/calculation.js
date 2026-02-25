@@ -1,7 +1,8 @@
 export default function calculate_taxed_income(ral_lorda){
     let tax_imports = {}
-    const imp_fiscale = apply_inps(ral_lorda, tax_imports);
+    const imp_fiscale = ral_lorda - apply_inps(ral_lorda, tax_imports);
     const irpef_netta = apply_irpef(imp_fiscale, tax_imports);
+    return [(imp_fiscale - irpef_netta - apply_addizionali(imp_fiscale, tax_imports)), tax_imports];
 }
 
 function apply_inps(ral, taxes){
@@ -9,7 +10,7 @@ function apply_inps(ral, taxes){
     //https://www.inps.it/it/it/inps-comunica/atti/circolari-messaggi-e-normativa/dettaglio.circolari-e-messaggi.2023.10.circolare-numero-88-del-31-10-2023_14306.html
     const tax_import = (ral * 9.19) / 100;
     taxes.inps = tax_import;
-    return ral - tax_import;
+    return tax_import;
 }
 
 function apply_irpef(imp_fiscale, taxes){
@@ -32,7 +33,7 @@ function apply_irpef(imp_fiscale, taxes){
 
     tax_import -= apply_detrazioni(imp_fiscale);
     taxes.irpef = tax_import;
-    return imp_fiscale - tax_import;
+    return tax_import;
 }
 
 function apply_detrazioni(reddito){
@@ -44,10 +45,29 @@ function apply_detrazioni(reddito){
     // Assumiamo che sia a contratto indeterminato
     detrazione = 1955;
    }else if(reddito > 15000 && reddito <= 28000){
-    detrazione = 1910 + 1190 * ((28000 - reddito) / 13000)
+    detrazione = 1910 + 1190 * ((28000 - reddito) / 13000);
    }else if(reddito > 28000 && reddito <= 50000){
-    detrazione = 1910 * ((50000 - reddito) / 22000)
+    detrazione = 1910 * ((50000 - reddito) / 22000);
    }
    // C'è un'altra detrazione a 200.000 euro ma viene applicata solo se i benefici superano il 19% delle detrazioni, prototipo non considera benefici
    return detrazione;
+}
+
+function apply_addizionali(reddito, taxes){
+    //Supponiamo Lombardia per regionale, è a scaglioni, seguo questo schema https://www1.finanze.gov.it/finanze2/dipartimentopolitichefiscali/fiscalitalocale/addregirpef/addregirpef.php?reg=10
+    let regional_tax = 0;
+   if (reddito <= 15000){
+    regional_tax = reddito * 1.23 / 100;
+   }else if(reddito > 15000 && reddito <= 28000){
+    regional_tax = 184.50 + ((reddito - 15000) * 1.58 / 100);
+   }else if(reddito > 28000 && reddito <= 50000){
+    regional_tax = 389.90 + ((reddito - 28000) * 1.72 / 100);
+   }else{
+    regional_tax = 768.30 + ((reddito - 50000) * 1.73 / 100);
+   }
+    //Supponiamo Milano come comunale che è il 0.8 dell'imponibile fiscale ora, fonte: https://www.comune.milano.it/argomenti/tributi/addizionale-comunale-irpef
+    const comunal_tax = reddito * 0.8 / 100;
+    taxes.add_reg = regional_tax;
+    taxes.add_com = comunal_tax;
+    return regional_tax + comunal_tax;
 }
